@@ -210,22 +210,23 @@ def submit():
     model_score = detector.model_signal(text)
     style_score = stylometry.style_signal(text)
     combined_score = scoring.combine_signals(model_score, style_score)
+    guess, label_text = scoring.score_to_label(combined_score)
     content_id = str(uuid.uuid4())
     audit.log_decision(
         content_id=content_id,
         creator_id=creator_id,
-        guess="pending",
+        guess=guess,
         model_score=model_score,
         style_score=style_score,
         combined_score=combined_score,
-        label="unsure",
+        label=label_text,
         status="decided"
     )
     return jsonify({
         "content_id": content_id,
-        "guess": text,
-        "confidence": 0.5,
-        "label": "unsure",
+        "guess": guess,
+        "confidence": combined_score,
+        "label": label_text,
         "model_score": model_score,
         "style_score": style_score,
         "combined_score": combined_score
@@ -235,48 +236,59 @@ def submit():
 @app.post("/appeal")
 def appeal():
     """
-    A writer says you got it wrong. ← TODO — Milestone 5
-
-    Expects JSON:
-        {"content_id": "...", "reasoning": "..."}
-
-    Should:
-      1. Check the content_id actually exists — `audit.entries_for(id)` tells
-         you. A typo here fails silently and looks like a broken endpoint,
-         which is the single most common way this milestone eats an hour.
-      2. Record the appeal with `audit.log_appeal(...)`, which moves the item
-         to `under_review`.
-      3. Confirm to the writer. No automatic re-checking needed.
-
-    This is the smallest endpoint in the project and the one that matters most
-    to the person on the other end. It's the only thing standing between a
-    wrong accusation and nothing at all.
+    Accept an appeal against a previous classification.
     """
     payload = request.get_json(silent=True) or {}
+    content_id = payload.get("content_id", "")
+    reasoning = payload.get("reasoning", "")
 
-    # TODO: delete this and build the route.
+    if not isinstance(content_id, str) or not content_id.strip():
+        return jsonify({
+            "error": "missing_content_id",
+            "message": "Please provide a valid content ID."
+        }), 400
+
+    entries = audit.entries_for(content_id)
+
+    if not entries:
+        return jsonify({
+            "error": "content_not_found",
+            "message": "No submission was found with this content ID."
+        }), 404
+
+    if not isinstance(reasoning, str) or not reasoning.strip():
+        return jsonify({
+            "error": "missing_reasoning",
+            "message": "Please provide a reason for your appeal."
+        }), 400
+
+    audit.log_appeal(
+        content_id=content_id,
+        creator_id=entries[0].get("creator_id", ""),
+        reasoning=reasoning.strip()
+    )
+
     return jsonify({
-        "error": "not_implemented",
-        "message": "POST /appeal isn't built yet — see the TODO in app.py.",
-        "you_sent": payload,
-    }), 501
+        "content_id": content_id,
+        "status": "under_review",
+        "message": "Your appeal has been received and recorded for human review."
+    }), 200
 
 
-# ── Already works ─────────────────────────────────────────────────────────────
+# ── Audit log ──────────────────────────────────────────────────────────────
 
 @app.get("/log")
 def get_log():
     """
-    The audit log, most recent last.
-
-        curl "http://127.0.0.1:5000/log?limit=10"
-
-    You need this in unit 8 to paste entries into your README, and you need it
-    now to see whether your logging is actually working.
+    Return audit log entries, most recent last.
     """
     limit = request.args.get("limit", type=int)
     entries = audit.read_entries(limit=limit)
-    return jsonify({"count": len(entries), "entries": entries})
+
+    return jsonify({
+        "count": len(entries),
+        "entries": entries
+    })
 
 
 def main():
