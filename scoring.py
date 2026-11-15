@@ -52,6 +52,13 @@ def combine_signals(model_score: float, style_score: float) -> float:
     The weights in config.py are placeholders. Change them, or ignore them and
     write a different rule.
     """
+    # Combining rule: weighted average of model and style signals.
+    # Model weight = 0.50; style weight = 0.50.
+    # Both signals range from 0 to 1, with higher scores meaning
+    # more AI-like patterns.
+    # When the signals disagree, their average moves toward 0.5,
+    # allowing the system to express uncertainty.
+    # These weights are provisional and require calibration.
     # TODO: replace this
     return (
         config.WEIGHT_MODEL_SIGNAL * model_score
