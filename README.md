@@ -363,3 +363,78 @@ The current rate limiter uses in-memory storage. This is suitable for local test
   }
 ]
 ```
+
+## Unit 8 — Milestone 4: Root Cause Analysis
+
+### Baseline Acceptance Results
+
+The baseline evaluation was conducted on November 15, 2026, using three trials per acceptance criterion.
+
+| Criterion | Trial 1 | Trial 2 | Trial 3 | Verdict |
+|---|---|---|---|---|
+| 1. Zero false positives | 2/10 FP | 2/10 FP | 2/10 FP | MISSED |
+| 2. AI-human score separation >= 0.50 | -0.148 | -0.148 | -0.148 | MISSED |
+| 3. All three labels appear | unsure only | unsure only | unsure only | MISSED |
+| 4. Three valid appeals | 3/3 | 3/3 | 3/3 | MET |
+| 5. Invalid submissions return HTTP 400 | 2/2 | 2/2 | 2/2 | MET |
+
+### Root Cause 1: False Positives
+
+Two genuinely human-written samples were incorrectly classified as AI-generated in every trial.
+
+The detector combines the GPT-2 model signal and stylometry signal using equal weights.
+
+In one false-positive case:
+
+- Model score: 0.7760
+- Style score: 0.5385
+- Combined score: 0.6573
+- Classification: ai
+
+The combined score exceeded the AI threshold of 0.65.
+
+Relevant code:
+- scoring.py::combine_signals
+- scoring.py::score_to_label
+- config.py::AI_THRESHOLD
+
+### Root Cause 2: Poor Score Separation
+
+The average score for three human-written samples was approximately 0.534.
+
+The average score for three AI-generated samples was approximately 0.386.
+
+The difference was approximately -0.148, below the required +0.50.
+
+This suggests that the current GPT-2 predictability signal and stylometry combination do not reliably distinguish these human and AI samples.
+
+### Root Cause 3: Incomplete Label Coverage
+
+All five samples in the label-coverage scenario received the classification "unsure".
+
+Their combined scores fell between the human threshold of 0.35 and the AI threshold of 0.65.
+
+The classification labels are reachable in the code, but the selected evaluation samples did not exercise all three categories.
+
+### Working Safeguards
+
+The appeal system passed all three trials. Nine valid appeals were accepted and verified in the audit log with status "under_review".
+
+The invalid-input tests also passed. Empty and missing text returned HTTP 400 without classification.
+
+### Planned Improvement
+
+The proposed single improvement is to increase AI_THRESHOLD from 0.65 to 0.75.
+
+The objective is to reduce false accusations against human writers.
+
+This adjustment may also allow more AI-generated text to avoid an AI classification. The trade-off will be evaluated using the same acceptance tests and attack suite.
+
+The original acceptance criteria will not be changed.
+
+### Evidence
+
+- results/run_2026-11-15_1838_before.md
+- results/appeals_2026-11-15_1846_before.json
+- results/appeals_2026-11-15_1852_before.json
+
