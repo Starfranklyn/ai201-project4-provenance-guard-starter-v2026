@@ -177,3 +177,71 @@ curl "http://127.0.0.1:5000/log?limit=3"
 - **What I asked for:** I asked for help implementing stylometry, combining the detection signals, assigning three classification labels, and supporting appeals.
 - **What came back:** I received explanations of the measurements, weighted scoring, threshold-based labels, and appeal validation.
 - **What I changed:** I implemented the scoring and appeal logic, tested the label mapping, and submitted an appeal to verify the API response. I also examined how the style score changes with different writing patterns.
+
+---
+
+## Rate Limiting
+
+### Configuration
+
+I enabled rate limiting in `config.py` and activated the rate-limiting decorator on the `/submit` endpoint in `app.py`.
+
+The application uses the following limits:
+
+- **10 submissions per minute**
+- **200 submissions per day**
+
+I selected these limits to allow normal submissions while restricting excessive automated requests. The daily limit provides additional protection against sustained high-volume activity.
+
+### Flood Test
+
+I tested the rate limiter by sending 15 submissions using the same creator ID.
+
+**Command:**
+
+```bash
+python run_attacks.py --flood 15
+```
+
+**Actual results:**
+
+```text
+200 200 200 200 200 200 200 200 200 200 200 429 429 429 429
+```
+
+| Result | Count |
+|---|---:|
+| Accepted (HTTP 200) | 11 |
+| Rate limited (HTTP 429) | 4 |
+| Total submissions | 15 |
+
+The limiter blocked four requests. Although the configured threshold was 10 requests per minute, 11 requests succeeded. This discrepancy requires further investigation.
+
+### Audit Log Verification
+
+I inspected the audit log using:
+
+```bash
+curl "http://127.0.0.1:5000/log?limit=6"
+```
+
+The log contained four rejection entries with the following fields:
+
+```json
+{
+  "creator_id": "flood_tester",
+  "event": "rejected",
+  "limit": "10 per 1 minute",
+  "reason": "rate_limited",
+  "status": "rejected",
+  "timestamp": "2026-11-15T22:17:43+00:00"
+}
+```
+
+This confirms that the system records requests rejected by the rate limiter.
+
+**Evidence file:** `results/flood_2026-11-15_1717.md`
+
+### Limitations
+
+The current rate limiter uses in-memory storage. This is suitable for local testing but is not sufficient for a production system deployed across multiple application instances. A shared storage backend, such as Redis, would be more appropriate for production use.
