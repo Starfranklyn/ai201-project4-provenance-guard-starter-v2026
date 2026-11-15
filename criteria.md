@@ -43,61 +43,59 @@ Two things worth knowing before you pick numbers:
 
 ---
 ## 1.
-
-<!-- Your criterion. It must name a number. -->
+Zero false positives among 10 human-written samples in each of three trials.
 
 
 
 **Why this target:**
-
+Human writing is creative work, and incorrectly attributing it to AI denies the writer proper credit.
 
 
 ---
 
 ## 2.
 
-<!-- Your criterion. -->
+When I test Provenance Guard using 3 human-written samples and 3 AI-generated samples, I should have a minimum average score difference of 0.50, with AI scoring higher and the target must be met in 3 trials. 
 
 
 
 **Why this target:**
-
+I chose this target because human writing naturally contains variations and imperfections while AI writing sound so mechanical 
 
 
 ---
 
 ## 3.
-
-<!-- Your criterion. -->
+At least one submission must produce each of the three labels in every trial, across three trials.
 
 
 
 **Why this target:**
-
+I chose this target because in the face of insufficient evidence, it is better to acknowledge uncertainty than present an unreliable conclusion as fact.
 
 
 ---
 
 ## 4.
 
-<!-- Your criterion. -->
+There should be 3 valid appeals per trial. All 3 must be recorded in the audit log and must have the status under_review and the requirement must hold across 3 trials. 
 
 
 
 **Why this target:**
-
+I chose this target because every appeal should receive fair consideration based on the merits presented by the writer. 
 
 
 ---
 
 ## 5.
 
-<!-- Your criterion. -->
+There should be test for two invalid submissions: one with empty text and one with the text field missing. Both must return HTTP 400 and must not produce a classification decision and Both tests must pass in each of three trials.
 
 
 
 **Why this target:**
-
+I chose this target because there is no information for the system to make any decision.
 
 
 ---
