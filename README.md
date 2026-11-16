@@ -454,7 +454,7 @@ No changes were made to the GPT-2 model, stylometry algorithm, signal weights, o
 | Zero human false positives | 2/10 | 0/10 | Improved; MET |
 | AI-human score separation >= 0.50 | -0.148 | -0.148 | Unchanged; MISSED |
 | All three labels appear | unsure only | unsure only | Unchanged; MISSED |
-| Three valid appeals | 3/3 | Pending retest | Pending |
+| Three valid appeals | 3/3 | 3/3 | Unchanged; MET |
 | Invalid submissions return HTTP 400 | 2/2 | 2/2 | Unchanged; MET |
 
 ### Attack Testing
@@ -501,4 +501,5 @@ The system should not be used as definitive evidence of authorship.
 - results/attack_run_2026-11-15_1907_after.md
 - results/appeals_2026-11-15_1852_before.json
 - results/selected_audit_entries_after.json
+- results/appeals_2026-11-15_1910_after.json
 
