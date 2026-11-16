@@ -164,20 +164,19 @@ curl "http://127.0.0.1:5000/log?limit=3"
 
 ---
 
-## How I Used AI
+### How I Used AI
 
-### Moment 1
+I used ChatGPT as a coding assistant throughout this project to help me plan my tests, write Python scripts, troubleshoot errors, and interpret the results. However, I ran the tests myself, examined the outputs, and used the evidence to decide what needed improvement.
 
-- **What I asked for:** I asked for guidance on implementing the text detection API and connecting the GPT-2 detector to the submission endpoint.
-- **What came back:** I received explanations and code suggestions for processing requests, generating scores, returning JSON responses, and recording decisions.
-- **What I changed:** I incorporated the suggested implementation into the project, ran the application locally, and tested the submission endpoint using `curl`.
+AI was particularly helpful when I developed the evaluation scripts for the five acceptance criteria. It helped me organize the test scenarios, automate repeated trials, and generate reports that I could compare before and after making changes. This saved time and made it easier to identify weaknesses in the detector.
 
-### Moment 2
+Not everything AI suggested worked correctly. For example, the initial appeal-testing script assumed that the client could provide a content ID. When I ran the script, all nine appeals failed with HTTP 404 errors. After examining the application code, I discovered that the server generates its own content ID for each submission. I corrected the script to use the ID returned by the server, reran the tests, and verified that all nine appeals passed. This experience showed me why AI-generated code must be tested rather than accepted without verification.
 
-- **What I asked for:** I asked for help implementing stylometry, combining the detection signals, assigning three classification labels, and supporting appeals.
-- **What came back:** I received explanations of the measurements, weighted scoring, threshold-based labels, and appeal validation.
-- **What I changed:** I implemented the scoring and appeal logic, tested the label mapping, and submitted an appeal to verify the API response. I also examined how the style score changes with different writing patterns.
+AI also helped me analyze the detector's false positives. The baseline evaluation showed that two out of ten human-written samples were incorrectly classified as AI-generated. Based on the results, I increased the AI classification threshold from 0.65 to 0.75 and repeated the evaluation. The false positives dropped from two to zero. However, the change did not improve the detector's ability to distinguish AI-generated text from human-written text. The score-separation and label-coverage criteria still failed.
 
+I chose to keep this limitation visible in my report rather than claim that the detector was fully fixed. The final evaluation met three of the five acceptance criteria, and the attack tests identified additional weaknesses in input validation and evasion resistance.
+
+The most important lesson I learned was that AI can help with coding, testing, and debugging, but its suggestions still require human judgment. I remained responsible for running the experiments, checking the evidence, correcting mistakes, and reporting both successful and unsuccessful results.
 ---
 
 ## Rate Limiting
