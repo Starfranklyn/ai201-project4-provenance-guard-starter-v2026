@@ -438,3 +438,67 @@ The original acceptance criteria will not be changed.
 - results/appeals_2026-11-15_1846_before.json
 - results/appeals_2026-11-15_1852_before.json
 
+
+## Unit 8 — Milestone 5: Improvement Evaluation
+
+### Single Change
+
+The AI classification threshold was increased from 0.65 to 0.75 in config.py.
+
+No changes were made to the GPT-2 model, stylometry algorithm, signal weights, or human classification threshold.
+
+### Before-and-After Results
+
+| Criterion | Before | After | Outcome |
+|---|---|---|---|
+| Zero human false positives | 2/10 | 0/10 | Improved; MET |
+| AI-human score separation >= 0.50 | -0.148 | -0.148 | Unchanged; MISSED |
+| All three labels appear | unsure only | unsure only | Unchanged; MISSED |
+| Three valid appeals | 3/3 | Pending retest | Pending |
+| Invalid submissions return HTTP 400 | 2/2 | 2/2 | Unchanged; MET |
+
+### Attack Testing
+
+The same 56 attack cases were executed before and after the threshold adjustment.
+
+Six designated human samples (FP02-FP07) changed from AI classifications to unsure classifications.
+
+EV08 remained classified as human, demonstrating that AI evasion remains possible.
+
+MF03, MF04, MF08, and RQ06 continued to expose input-validation weaknesses.
+
+The flood test continued to return HTTP 429 for requests 11 and 12.
+
+The attack runner did not automatically determine success or failure for these cases; conclusions were based on manual review of the responses.
+
+### What's Still Broken
+
+The detector does not reliably separate human-written and AI-generated text.
+
+The three AI-generated evaluation samples received lower average scores than the three human-written samples.
+
+The label-coverage scenario produced only unsure classifications.
+
+Some malformed and oversized inputs were accepted.
+
+The detector remains vulnerable to evasion, and a higher AI threshold may allow more AI-generated text to avoid AI classification.
+
+### Trade-off
+
+Increasing the AI threshold reduced false accusations against human writers.
+
+However, it did not improve the underlying detection signals or score separation.
+
+The improvement prioritizes avoiding false accusations over confidently identifying AI-generated writing.
+
+The system should not be used as definitive evidence of authorship.
+
+### Evidence
+
+- results/run_2026-11-15_1838_before.md
+- results/run_2026-11-15_1903_after.md
+- results/attack_run_2026-11-15_1746_before.md
+- results/attack_run_2026-11-15_1907_after.md
+- results/appeals_2026-11-15_1852_before.json
+- results/selected_audit_entries_after.json
+
