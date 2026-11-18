@@ -523,3 +523,113 @@ The scope excludes changes to the detection model, classification thresholds, si
 
 The goal is to improve failure handling without changing the existing classification behavior for valid submissions.
 
+**Running It**
+
+This capstone uses Path B: local deployment with operational logs.
+
+From the project directory, activate the Python virtual environment and install the pinned dependencies in `requirements-lock.txt`.
+
+Start the application with:
+
+```bash
+gunicorn --bind 127.0.0.1:5000 --workers 1 --timeout 180 app:app
+```
+
+The extended startup timeout allows the model dependencies to initialize. A shorter Gunicorn timeout caused a worker timeout during testing.
+
+The application runs locally at `http://127.0.0.1:5000`. See `RUNNING.md` for deployment instructions.
+
+**Instrumentation**
+
+The application records structured JSONL operational events in `logs/audit.jsonl`.
+
+Each `capstone_request` event contains a timestamp, creator identifier, input character count, HTTP response status, processing duration in milliseconds, and completion or rejection status.
+
+The instrumentation supports debugging, performance measurement, and validation of failure handling.
+
+The application does not need to store the full submitted text in the operational event.
+
+**What It Costs**
+
+I measured ten successful, sequential, warm requests against the local Gunicorn server.
+
+All ten requests returned HTTP 200.
+
+| Measurement | Result |
+|---|---:|
+| Successful requests | 10/10 |
+| Average response time | 0.0572 seconds |
+| Estimated processing time for 100 requests/day | 5.72 seconds |
+| Estimated processing time over 30 days at 100 requests/day | 171.60 seconds |
+
+The daily estimate is calculated as 0.0572 seconds multiplied by 100 requests.
+
+The monthly estimate is calculated as 0.0572 seconds multiplied by 3,000 requests.
+
+These estimates describe cumulative warm request latency, not the time or monetary cost of keeping a server running. They exclude startup, idle resource use, hosting fees, and concurrent traffic. The initial model startup was substantially slower than subsequent requests.
+
+**Run Log and Verdicts**
+
+I committed five measurable acceptance criteria in `criteria.md` before the formal baseline evaluation.
+
+Each criterion was tested three times before and after the measured improvement.
+
+| Acceptance criterion | Baseline trials | After improvement | Verdict |
+|---|---|---|---|
+| Oversized submission returns HTTP 400 | 3/3 | 3/3 | Pass |
+| Unsupported control character returns HTTP 400 | 3/3 | 3/3 | Pass |
+| Punctuation-only submission returns HTTP 400 | 3/3 | 3/3 | Pass |
+| Valid submission returns HTTP 200 and classification | 3/3 | 3/3 | Pass |
+| Structured operational logging | 3/3 | 3/3 | Pass |
+| **Total** | **15/15** | **15/15** | **Pass** |
+
+The first four criteria were evaluated with HTTP requests. The fifth was verified against the JSONL operational records.
+
+An additional check verified the accuracy of 12 baseline log records, including HTTP status, input character count, and nonnegative processing duration. All 12 passed.
+
+The original baseline results were observed before the improvement. The saved `capstone_baseline_before.json` file was copied after the post-improvement run and therefore should not be treated as an independent copy of the original baseline. The original baseline outcomes are recorded in the evaluation notes.
+
+**The Improvement**
+
+After the baseline passed, I investigated a separate failure mode: what happens when writing an operational audit event fails.
+
+I simulated a disk-write failure by mocking `audit.log_operation` to raise `OSError` during a request.
+
+Before the improvement, all three trials raised `OSError` instead of returning the expected HTTP 400 response.
+
+I then added targeted `OSError` handling around operational logging in the Flask `after_request` hook. The handler reports the logging failure through Flask's error logger while preserving the HTTP response.
+
+I repeated the same simulated failure experiment after the change.
+
+| Resilience experiment | Before | After |
+|---|---|---|
+| Trials preserving HTTP 400 despite logging failure | 0/3 | 3/3 |
+| Success rate | 0% | 100% |
+
+All five acceptance criteria also passed their three post-improvement trials. This supports the conclusion that the targeted resilience change did not regress the tested submission behavior.
+
+**What's Still Broken**
+
+The improvement preserves HTTP responses when operational logging raises `OSError`, but a failed log write can still result in a missing audit record.
+
+The handler does not recover the missing record, retry writes, or provide durable external log storage.
+
+Other exceptions unrelated to `OSError` may still propagate.
+
+The application uses local deployment and has not been evaluated under sustained concurrent traffic or production hosting conditions.
+
+The performance estimates exclude server startup and infrastructure costs.
+
+The extension does not address the underlying accuracy limitations of AI-generated text detection identified during Unit 8.
+
+**How I Used AI**
+
+I used AI assistance to review implementation options, prepare shell commands, inspect test outputs, and help organize the capstone documentation.
+
+I selected the failure-hardening scope and provided the reasoning for my five acceptance criteria.
+
+I ran the experiments locally, reported the observed results, and used the measurements to decide whether a proposed improvement was justified.
+
+When the baseline showed that logging accuracy was already 100%, I did not claim an accuracy improvement. Instead, I tested logging-failure resilience and measured the result before and after the targeted change.
+
+The acceptance criteria were committed before the formal baseline experiments.
