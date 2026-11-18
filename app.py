@@ -62,12 +62,17 @@ def capstone_request_timing(response):
         input_chars = len(submitted_text) if isinstance(submitted_text, str) else None
 
         import audit
-        audit.log_operation(
-            creator_id=payload.get("creator_id", ""),
-            input_chars=input_chars,
-            http_status=response.status_code,
-            duration_ms=duration_ms
-        )
+        try:
+            audit.log_operation(
+                creator_id=payload.get("creator_id", ""),
+                input_chars=input_chars,
+                http_status=response.status_code,
+                duration_ms=duration_ms
+            )
+        except OSError:
+            app.logger.exception(
+                "Operational audit logging failed; preserving HTTP response"
+            )
 
     return response
 
