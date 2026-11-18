@@ -25,8 +25,9 @@ Routes:
 """
 
 import uuid
+import time
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, g
 
 import audit
 import config
@@ -37,6 +38,40 @@ import scoring
 
 
 app = Flask(__name__)
+
+# Unit 9 Capstone: Request timing and structured operational logs.
+@app.before_request
+def capstone_start_timer():
+    if request.path == "/submit":
+        g.capstone_start_time = time.perf_counter()
+
+
+@app.after_request
+def capstone_request_timing(response):
+    if request.path == "/submit" and hasattr(g, "capstone_start_time"):
+        duration_ms = round(
+            (time.perf_counter() - g.capstone_start_time) * 1000,
+            3
+        )
+
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            payload = {}
+
+        submitted_text = payload.get("text")
+        input_chars = len(submitted_text) if isinstance(submitted_text, str) else None
+
+        import audit
+        audit.log_operation(
+            creator_id=payload.get("creator_id", ""),
+            input_chars=input_chars,
+            http_status=response.status_code,
+            duration_ms=duration_ms
+        )
+
+    return response
+
+
 
 
 # ── Rate limiting — UNIT 8 ────────────────────────────────────────────────────
