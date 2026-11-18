@@ -27,7 +27,7 @@ python -m pip install -r requirements-lock.txt
 Activate the virtual environment, then start the service:
 
 ```bash
-gunicorn --bind 127.0.0.1:5000 --workers 1 app:app
+gunicorn --bind 127.0.0.1:5000 --workers 1 --timeout 180 app:app
 ```
 
 The service runs locally at http://127.0.0.1:5000.
