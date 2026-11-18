@@ -108,3 +108,9 @@ RATE_LIMIT_STORAGE = "memory://"
 LOG_DIR = ROOT / "logs"
 AUDIT_LOG = LOG_DIR / "audit.jsonl"
 RESULTS_DIR = ROOT / "results"
+
+
+# ─── Unit 9 Capstone: Input validation ──────────────────────────────
+
+MAX_SUBMISSION_CHARS = 10000
+
