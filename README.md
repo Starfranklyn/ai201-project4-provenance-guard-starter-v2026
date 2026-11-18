@@ -587,7 +587,7 @@ The first four criteria were evaluated with HTTP requests. The fifth was verifie
 
 An additional check verified the accuracy of 12 baseline log records, including HTTP status, input character count, and nonnegative processing duration. All 12 passed.
 
-The original baseline results were observed before the improvement. The saved `capstone_baseline_before.json` file was copied after the post-improvement run and therefore should not be treated as an independent copy of the original baseline. The original baseline outcomes are recorded in the evaluation notes.
+The original baseline results were observed before the improvement. The saved `capstone_baseline_before.json` file was copied after the post-improvement run and therefore should not be treated as an independent copy of the original baseline. The original baseline outcomes were observed during testing and are summarized in the evaluation table above; the original baseline JSON file was overwritten.
 
 **The Improvement**
 
