@@ -197,6 +197,39 @@ def submit():
             "message": "Text is required and cannot be empty."
         }), 400
 
+    # Unit 9: Reject oversized submissions before model inference.
+    if len(text) > config.MAX_SUBMISSION_CHARS:
+        audit.log_rejection(
+            creator_id=creator_id,
+            reason="submission_too_large"
+        )
+        return jsonify({
+            "error": "submission_too_large",
+            "message": "Submission exceeds the maximum character limit."
+        }), 400
+
+    # Unit 9: Reject unsupported control characters.
+    if any(ord(char) < 32 and char not in "\\n\\r\\t" for char in text):
+        audit.log_rejection(
+            creator_id=creator_id,
+            reason="unsupported_control_character"
+        )
+        return jsonify({
+            "error": "unsupported_control_character",
+            "message": "Submission contains unsupported control characters."
+        }), 400
+
+    # Unit 9: Reject submissions without alphabetic words.
+    if not any(char.isalpha() for char in text):
+        audit.log_rejection(
+            creator_id=creator_id,
+            reason="no_meaningful_words"
+        )
+        return jsonify({
+            "error": "no_meaningful_words",
+            "message": "Submission must contain meaningful words."
+        }), 400
+
     # Preserve the detector's minimum-input requirement.
     if len(text.split()) < 3:
         audit.log_rejection(
