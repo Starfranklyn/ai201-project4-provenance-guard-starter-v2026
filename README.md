@@ -502,3 +502,24 @@ The system should not be used as definitive evidence of authorship.
 - results/selected_audit_entries_after.json
 - results/appeals_2026-11-15_1910_after.json
 
+
+## Capstone
+
+**What This Extends**
+
+This capstone extends the existing Provenance Guard application developed and tested during CodePath AI 201. The application classifies submitted text using model-based and stylometric signals and records classification decisions for auditing.
+
+The Unit 8 attack tests revealed weaknesses in how the application handles malformed and oversized text submissions.
+
+**The Shape**
+
+I selected Shape B — Harden Against Failure.
+
+The extension strengthens input validation for the existing `/submit` endpoint. It focuses on rejecting oversized text, unsupported control characters, and submissions that contain no meaningful words.
+
+These requests should produce clear HTTP 400 responses rather than proceed to model inference.
+
+The scope excludes changes to the detection model, classification thresholds, signal weights, appeal workflow, and user interface.
+
+The goal is to improve failure handling without changing the existing classification behavior for valid submissions.
+
