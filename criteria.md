@@ -1,3 +1,4 @@
+
 # Acceptance criteria — Provenance Guard
 
 Five criteria that say what "working" means for this service, written in unit 7
@@ -130,3 +131,41 @@ I chose this target because there is no information for the system to make any d
      A number you missed stays where it is, gets diagnosed, and gets a fix
      attempted. That's where the points are.
      ───────────────────────────────────────────────────────────────────────── -->
+
+
+## Unit 9 Capstone Acceptance Criteria
+
+1. Oversized Submission Validation
+
+When a user submits text exceeding 10,000 characters, the system should return HTTP 400 with the error code `submission_too_large`.
+
+**Why this target:** This prevents excessive processing and protects system resources.
+
+
+2. Unsupported Control Character Validation
+
+When a submission contains an unsupported control character such as `\\x00`, the system should return HTTP 400 with the error code `unsupported_control_character`.
+
+**Why this target:** This prevents malformed inputs from reaching the classification model.
+
+
+3. Punctuation-Only Submission Validation
+
+When a user submits punctuation-only text such as `!!! ??? ###`, the system should return HTTP 400 with the error code `no_meaningful_words`.
+
+**Why this target:** The submission contains no alphabetic content suitable for meaningful classification.
+
+
+4. Valid Submission Processing
+
+For each of three trials, a valid submission containing at least three words and no prohibited characters should return HTTP 200 and include a classification result.
+
+**Why this target:** The new validation rules should not prevent legitimate submissions from being classified.
+
+
+5. Structured Operational Logging
+
+In each of three trials, submit one valid request and one invalid request. Both requests must generate operational log records containing a timestamp, input character count, HTTP status, and execution duration in milliseconds.
+
+**Why this target:** Recording successful and rejected requests helps monitor performance, investigate failures, and provide evidence of system behavior.
+
